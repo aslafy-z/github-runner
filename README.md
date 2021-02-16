@@ -1,5 +1,6 @@
 # Github Actions Runner for Docker and AWS
 
+[![awesome-runners](https://img.shields.io/badge/listed%20on-awesome--runners-blue.svg)](https://github.com/jonico/awesome-runners)
 ![GitHub Actions Runner in Docker][docker-build-badge]
 ![GitHub Actions Runner in AWS EC2][aws-ec2-build-badge]
 [![Docker Pulls][docker-pulls]][docker-hub]
