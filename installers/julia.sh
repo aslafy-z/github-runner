@@ -1,7 +1,7 @@
 #!/bin/bash -e
 ################################################################################
-##  File:  java-tools.sh
-##  Desc:  Installs Java and related tooling (Ant, Gradle, Maven)
+##  File:  julia.sh
+##  Desc:  Installs Julia, and adds Julia to the path
 ################################################################################
 
 echo "skipping"

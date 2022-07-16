@@ -1,7 +1,7 @@
 #!/bin/bash -e
 ################################################################################
-##  File:  java-tools.sh
-##  Desc:  Installs Java and related tooling (Ant, Gradle, Maven)
+##  File:  oras-cli.sh
+##  Desc:  Installs ORAS CLI
 ################################################################################
 
 echo "skipping"

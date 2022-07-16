@@ -1,7 +1,7 @@
 #!/bin/bash -e
 ################################################################################
-##  File:  java-tools.sh
-##  Desc:  Installs Java and related tooling (Ant, Gradle, Maven)
+##  File:  google-chrome.sh
+##  Desc:  Installs google-chrome, chromedriver and chromium
 ################################################################################
 
 echo "skipping"

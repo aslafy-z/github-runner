@@ -1,6 +1,6 @@
 [
     {
-        "find": "apt-get dist-upgrade -y",
-        "replace": "DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confold\" dist-upgrade"
+        "find": "pwsh -File {{user `image_folder`}}/SoftwareReport/SoftwareReport.Generator.ps1 -OutputDirectory {{user `image_folder`}}",
+        "replace": "sleep 1"
     }
 ]

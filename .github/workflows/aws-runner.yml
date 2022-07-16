@@ -8,7 +8,7 @@ on:
       - 'aws-add-provisioners.json'
       - 'aws-base.json'
       - 'aws-replace-inline.json'
-      - 'aws-ubuntu1*04.json'
+      - 'aws-ubuntu2*04.json'
       - 'merge-packer-templates.py'
       - 'replace-scripts.json'
       - '.github/workflows/aws-runner.yml'
@@ -23,11 +23,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
-      - name: Set up ssh-agent with td-aws-dev
-        uses: webcoast-dk/ssh-agent@master
-        with:
-          ssh-private-key: ${{ secrets.TD_AWS_DEV }}
-      - name: Build bionic and xenial root with packer
+#      - name: Set up ssh-agent with td-aws-dev
+#        uses: webcoast-dk/ssh-agent@master
+#        with:
+#          ssh-private-key: ${{ secrets.TD_AWS_DEV }}
+      - name: Build focal root with packer
         run: |
           export AWS_MAX_ATTEMPTS=360
           export AWS_POLL_DELAY_SECONDS=10
@@ -47,7 +47,7 @@ jobs:
         uses: webcoast-dk/ssh-agent@master
         with:
           ssh-private-key: ${{ secrets.TD_AWS_DEV }}
-      - name: Build bionic and xenial base with packer
+      - name: Build focal base with packer
         run: |
           export AWS_MAX_ATTEMPTS=360
           export AWS_POLL_DELAY_SECONDS=10
@@ -56,7 +56,7 @@ jobs:
             -var access_key="${{ secrets.AWS_ACCESS_KEY_ID }}" \
             -var secret_key="${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
             aws-base.json
-  bionic:
+  focal:
     needs: [base]
     runs-on: [self-hosted]
     if: "!contains(github.event.head_commit.message, 'ci skip') && !contains(github.event.head_commit.message, 'skip ci')"
@@ -67,32 +67,31 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - name: Set up ssh-agent with td-aws-dev and devops_deploy_DEV
-        uses: webcoast-dk/ssh-agent@master
-        with:
-          ssh-private-key: |
-            ${{ secrets.TD_AWS_DEV }}
-            ${{ secrets.DEVOPS_DEPLOY_DEV }}
+      #      - name: Set up ssh-agent with td-aws-dev and devops_deploy_DEV
+      #        uses: webcoast-dk/ssh-agent@master
+      #        with:
+      #          ssh-private-key: |
+      #            ${{ secrets.TD_AWS_DEV }}
+      #            ${{ secrets.DEVOPS_DEPLOY_DEV }}
       - name: Set up packer aws directory
         run: |
-          rm -frv aws-1804
-          mkdir aws-1804
-          cp -frv virtual-environments/images/linux/* aws-1804/
-          cp -frv installers/* aws-1804/scripts/installers/
-          cp -frv etc aws-1804/
-          cp -fv actions-runner-install.sh aws-1804/
-          cp -fv actions-runner-config.sh aws-1804/
+          rm -frv aws-2004
+          mkdir aws-2004
+          cp -frv virtual-environments/images/linux/* aws-2004/
+          cp -frv installers/* aws-2004/scripts/installers/
+          cp -frv etc aws-2004/
+          cp -fv actions-runner-install.sh aws-2004/
+          cp -fv actions-runner-config.sh aws-2004/
       - name: Merge packer templates
         run: |
           ./merge-packer-templates.py \
-            -t aws-1804/ubuntu1804.json \
-            -u virtual-environments/images/linux/ubuntu1804.json \
-            -g aws-ubuntu1804.json \
-            -a aws-add-provisioners.json \
-            -i aws-replace-inline.json
-      - name: Build 1804 with packer
+            -t aws-2004/ubuntu2004.json \
+            -u virtual-environments/images/linux/ubuntu2004.json \
+            -g aws-ubuntu2004.json \
+            -a aws-add-provisioners.json
+      - name: Build 2004 with packer
         run: |
-          cd aws-1804
+          cd aws-2004
           export AWS_MAX_ATTEMPTS=360
           export AWS_POLL_DELAY_SECONDS=10
           export PACKER_LOG=1
@@ -101,88 +100,23 @@ jobs:
             -var vcs_ref="$(git rev-parse --verify HEAD | cut -c1-8)" \
             -var access_key="${{ secrets.AWS_ACCESS_KEY_ID }}" \
             -var secret_key="${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
-            -var github_feed_token="${{ secrets.GH_PAT }}" \
-            ubuntu1804.json
-      - name: Get the updated AWS-Ubuntu1804-README.md file
-        run: cp -frv aws-1804/Ubuntu1804-README.md ./AWS-Ubuntu1804-README.md
+            -var github_feed_token="${{ secrets.MEROXA_MACHINE }}" \
+            ubuntu2004.json
+      - name: Get the updated AWS-Ubuntu2004-README.md file
+        run: cp -frv aws-2004/Ubuntu2004-README.md ./AWS-Ubuntu2004-README.md
       - name: Remove the packer working directory
-        run: rm -frv aws-1804
+        run: rm -frv aws-2004
       - name: Set up Git
         run: |
-          git config --local user.email "sysadmin@terradatum.com"
-          git config --local user.name "Terradatum Automation"
+          git config --local user.email "meroxa-machine@meroxa.io"
+          git config --local user.name "Meroxa Machine"
           git remote set-url origin git@github.com:${GITHUB_REPOSITORY}.git
       - name: Add, commit, pull, and then push changes
         run: |
           echo ${{ github.ref }}
           git add .
           if output=$(git status --porcelain) && [ ! -z "$output" ]; then
-            git commit -m "ci: Update AWS-Ubuntu1804-README.md [skip ci]" -a
-            git pull --rebase
-            git push
-          fi
-  xenial:
-    needs: [base]
-    runs-on: [self-hosted]
-    if: "!contains(github.event.head_commit.message, 'ci skip') && !contains(github.event.head_commit.message, 'skip ci')"
-    timeout-minutes: 720
-    steps:
-      - name: Checkout
-        uses: actions/checkout@master
-        with:
-          fetch-depth: 0
-          submodules: true
-      - name: Set up ssh-agent with td-aws-dev and devops_deploy_DEV
-        uses: webcoast-dk/ssh-agent@master
-        with:
-          ssh-private-key: |
-            ${{ secrets.TD_AWS_DEV }}
-            ${{ secrets.DEVOPS_DEPLOY_DEV }}
-      - name: Set up packer aws directory
-        run: |
-          rm -frv aws-1604
-          mkdir aws-1604
-          cp -frv virtual-environments/images/linux/* aws-1604/
-          cp -frv installers/* aws-1604/scripts/installers/
-          cp -frv etc aws-1604/
-          cp -fv actions-runner-install.sh aws-1604/
-          cp -fv actions-runner-config.sh aws-1604/
-      - name: Merge packer templates
-        run: |
-          ./merge-packer-templates.py \
-            -t aws-1604/ubuntu1604.json \
-            -u virtual-environments/images/linux/ubuntu1604.json \
-            -g aws-ubuntu1604.json \
-            -a aws-add-provisioners.json \
-            -i aws-replace-inline.json
-      - name: Build 1604 with packer
-        run: |
-          cd aws-1604
-          export AWS_MAX_ATTEMPTS=360
-          export AWS_POLL_DELAY_SECONDS=10
-          export PACKER_LOG=1
-          packer build \
-            -var commit_url="${{ github.ref }}" \
-            -var vcs_ref="$(git rev-parse --verify HEAD | cut -c1-8)" \
-            -var access_key="${{ secrets.AWS_ACCESS_KEY_ID }}" \
-            -var secret_key="${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
-            -var github_feed_token="${{ secrets.GH_PAT }}" \
-            ubuntu1604.json
-      - name: Get the updated AWS-Ubuntu1604-README.md file
-        run: cp -frv aws-1604/Ubuntu1604-README.md ./AWS-Ubuntu1604-README.md
-      - name: Remove the packer working directory
-        run: rm -frv aws-1604
-      - name: Set up Git
-        run: |
-          git config --local user.email "sysadmin@terradatum.com"
-          git config --local user.name "Terradatum Automation"
-          git remote set-url origin git@github.com:${GITHUB_REPOSITORY}.git
-      - name: Add, commit, pull, and then push changes
-        run: |
-          echo ${{ github.ref }}
-          git add .
-          if output=$(git status --porcelain) && [ ! -z "$output" ]; then
-            git commit -m "ci: Update AWS-Ubuntu1604-README.md [skip ci]" -a
+            git commit -m "ci: Update AWS-Ubuntu2004-README.md [skip ci]" -a
             git pull --rebase
             git push
           fi

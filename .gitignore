@@ -3,10 +3,8 @@
 *.iml
 !.idea/runConfigurations
 
-docker-1804
-docker-1604
-aws-1804
-aws-1604
+docker-2004
+aws-2004
 
 # Ignore secrets
 .secrets

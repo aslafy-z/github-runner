@@ -12,10 +12,12 @@
         "installer_script_folder": "/imagegeneration/installers",
         "helper_script_folder": "/imagegeneration/helpers",
         "image_version": "dev",
-        "image_os": "ubuntu18",
-        "github_feed_token": "{{env `GITHUB_TOKEN`}}",
-        "go_default": "1.14",
-        "go_versions": "1.11 1.12 1.13 1.14"
+        "image_os": "ubuntu20",
+        "github_feed_token": "{{env `MEROXA_MACHINE`}}",
+        "go_default": "1.17",
+        "go_versions": "1.16 1.17",
+        "subnet_id": "{{env `PACKER_SUBNET_ID`}}",
+        "aws_account": "{{env `PACKER_AWS_ACCOUNT`}}"
     },
     "sensitive-variables": [
         "access_key",
@@ -24,36 +26,35 @@
     ],
     "builders": [
         {
-            "name": "xenial",
-            "region": "us-west-1",
+            "name": "focal",
+            "region": "us-east-1",
             "type": "amazon-ebs",
             "access_key": "{{user `access_key`}}",
             "secret_key": "{{user `secret_key`}}",
-            "ssh_keypair_name": "td-aws-dev",
+            "ssh_keypair_name": "meroxa-aws-ci",
             "ssh_agent_auth": true,
             "ssh_username": "runner",
-            "subnet_id": "subnet-c3b87cab",
+            "subnet_id": "{{user `subnet_id`}}",
             "source_ami_filter": {
                 "filters": {
                     "virtualization-type": "hvm",
-                    "name": "github-runner-base-xenial",
+                    "name": "github-runner-base-focal",
                     "root-device-type": "ebs"
                 },
                 "owners": [
-                    "076613928512"
+                    "{{user `aws_account`}}"
                 ],
                 "most_recent": true
             },
-            "instance_type": "t3a.large",
-            "ami_name": "github-runner-xenial",
+            "instance_type": "m5.xlarge",
+            "ami_name": "github-runner-focal-{{strftime \"%m-%d-%Y_%H-%M\"}}",
             "force_deregister": true,
             "force_delete_snapshot": true,
             "ami_regions": [
-                "us-west-1",
-                "us-west-2"
+                "us-east-1"
             ],
             "tags": {
-                "Name": "github-runner-xenial-{{isotime \"20060102150405\"}}",
+                "Name": "github-runner-focal-{{isotime \"20060102150405\"}}",
                 "os": "ubuntu",
                 "source": "github-runner",
                 "service": "ci",
@@ -62,7 +63,7 @@
             "launch_block_device_mappings": [
                 {
                     "device_name": "/dev/sda1",
-                    "volume_size": 1000,
+                    "volume_size": 100,
                     "volume_type": "gp2",
                     "delete_on_termination": true
                 }
@@ -75,9 +76,9 @@
             "inline": [
                 "echo 127.0.0.1 $(hostname) >> /etc/hosts",
                 "apt-get update",
-                "apt-get -y install --no-install-recommends sudo apt-utils software-properties-common lsb-release rsync gosu",
-                "apt-get -y install --no-install-recommends wget curl libunwind8 dos2unix apt-transport-https ca-certificates",
-                "apt-get -y install --no-install-recommends git ruby ohai locales fuse squashfuse hugepages",
+                "apt-get -y install --no-install-recommends sudo apt-utils software-properties-common lsb-release rsync",
+                "apt-get -y install --no-install-recommends wget curl libunwind8 apt-transport-https ca-certificates",
+                "apt-get -y install --no-install-recommends git ruby ohai locales",
                 "locale-gen en_US.UTF-8",
                 "export LANG=en_US.UTF-8 | tee -a /etc/environment"
             ],

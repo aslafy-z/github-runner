@@ -1,7 +1,7 @@
 #!/bin/bash -e
 ################################################################################
-##  File:  java-tools.sh
-##  Desc:  Installs Java and related tooling (Ant, Gradle, Maven)
+##  File:  google-cloud-sdk.sh
+##  Desc:  Installs the Google Cloud SDK
 ################################################################################
 
 echo "skipping"

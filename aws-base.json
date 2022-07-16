@@ -2,40 +2,41 @@
     "variables": {
         "runner_user": "runner",
         "access_key": "{{env `AWS_ACCESS_KEY_ID`}}",
-        "secret_key": "{{env `AWS_SECRET_ACCESS_KEY`}}"
+        "secret_key": "{{env `AWS_SECRET_ACCESS_KEY`}}",
+        "subnet_id": "{{env `PACKER_SUBNET_ID`}}",
+        "aws_account": "{{env `PACKER_AWS_ACCOUNT`}}"
     },
     "builders": [
         {
-            "name": "bionic",
-            "region": "us-west-1",
+            "name": "focal",
+            "region": "us-east-1",
             "type": "amazon-ebs",
             "access_key": "{{user `access_key`}}",
             "secret_key": "{{user `secret_key`}}",
-            "ssh_keypair_name": "td-aws-dev",
+            "ssh_keypair_name": "meroxa-aws-ci",
             "ssh_agent_auth": true,
             "ssh_username": "root",
-            "subnet_id": "subnet-c3b87cab",
+            "subnet_id": "{{user `subnet_id`}}",
             "source_ami_filter": {
                 "filters": {
                     "virtualization-type": "hvm",
-                    "name": "root-bionic",
+                    "name": "root-focal",
                     "root-device-type": "ebs"
                 },
                 "owners": [
-                    "076613928512"
+                    "{{user `aws_account`}}"
                 ],
                 "most_recent": true
             },
-            "instance_type": "t3a.large",
-            "ami_name": "github-runner-base-bionic",
+            "instance_type": "m5.xlarge",
+            "ami_name": "github-runner-base-focal",
             "force_deregister": true,
             "force_delete_snapshot": true,
             "ami_regions": [
-                "us-west-1",
-                "us-west-2"
+                "us-east-1"
             ],
             "tags": {
-                "Name": "github-runner-base-bionic-{{isotime \"20060102150405\"}}",
+                "Name": "github-runner-base-focal-{{isotime \"20060102150405\"}}",
                 "os": "ubuntu",
                 "source": "github-runner",
                 "service": "ci",
@@ -44,52 +45,7 @@
             "launch_block_device_mappings": [
                 {
                     "device_name": "/dev/sda1",
-                    "volume_size": 1000,
-                    "volume_type": "gp2",
-                    "delete_on_termination": true
-                }
-            ]
-        },
-        {
-            "name": "xenial",
-            "region": "us-west-1",
-            "type": "amazon-ebs",
-            "access_key": "{{user `access_key`}}",
-            "secret_key": "{{user `secret_key`}}",
-            "ssh_keypair_name": "td-aws-dev",
-            "ssh_agent_auth": true,
-            "ssh_username": "root",
-            "subnet_id": "subnet-c3b87cab",
-            "source_ami_filter": {
-                "filters": {
-                    "virtualization-type": "hvm",
-                    "name": "root-xenial",
-                    "root-device-type": "ebs"
-                },
-                "owners": [
-                    "076613928512"
-                ],
-                "most_recent": true
-            },
-            "instance_type": "t3a.large",
-            "ami_name": "github-runner-base-xenial",
-            "force_deregister": true,
-            "force_delete_snapshot": true,
-            "ami_regions": [
-                "us-west-1",
-                "us-west-2"
-            ],
-            "tags": {
-                "Name": "github-runner-base-xenial-{{isotime \"20060102150405\"}}",
-                "os": "ubuntu",
-                "source": "github-runner",
-                "service": "ci",
-                "env": "dev"
-            },
-            "launch_block_device_mappings": [
-                {
-                    "device_name": "/dev/sda1",
-                    "volume_size": 1000,
+                    "volume_size": 100,
                     "volume_type": "gp2",
                     "delete_on_termination": true
                 }
@@ -109,7 +65,7 @@
                 "sed -i 's/disable_root: false/disable_root: true/g' /etc/cloud/cloud.cfg",
                 "usermod --login {{user `runner_user`}} --move-home --home /home/{{user `runner_user`}} ubuntu",
                 "groupmod --new-name {{user `runner_user`}} ubuntu",
-                "apt-get -y -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confold\" dist-upgrade",
+                "apt-get -y -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confold\" upgrade",
                 "sed -i 's/disable_root: true/disable_root: false/g' /etc/cloud/cloud.cfg",
                 "sed -i 's/name: ubuntu/name: {{user `runner_user`}}/g' /etc/cloud/cloud.cfg",
                 "sed -i 's/gecos: Ubuntu/gecos: GitHub Actions Runner/g' /etc/cloud/cloud.cfg",

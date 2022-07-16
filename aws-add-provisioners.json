@@ -6,70 +6,20 @@
             "destination": "/tmp/hosts"
         },
         {
-            "type": "file",
-            "source": "{{template_dir}}/etc/github-runner-env",
-            "destination": "/tmp/github-runner-env"
-        },
-        {
-            "type": "file",
-            "source": "{{template_dir}}/etc/systemd/system/github-runner.service",
-            "destination": "/tmp/github-runner.service"
-        },
-        {
-            "type": "file",
-            "source": "{{template_dir}}/etc/systemd/system/github-runner@.service",
-            "destination": "/tmp/github-runner@.service"
-        },
-        {
-            "type": "file",
-            "source": "{{template_dir}}/etc/systemd/system/github-runner-install.service",
-            "destination": "/tmp/github-runner-install.service"
-        },
-        {
-            "type": "file",
-            "source": "{{template_dir}}/etc/systemd/system/github-runner-install@.service",
-            "destination": "/tmp/github-runner-install@.service"
-        },
-        {
-            "type": "file",
-            "source": "{{template_dir}}/etc/systemd/system/github-runner-config.service",
-            "destination": "/tmp/github-runner-config.service"
-        },
-        {
-            "type": "file",
-            "source": "{{template_dir}}/etc/systemd/system/github-runner-config@.service",
-            "destination": "/tmp/github-runner-config@.service"
-        },
-        {
-            "type": "file",
-            "source": "{{template_dir}}/actions-runner-install.sh",
-            "destination": "/tmp/actions-runner-install.sh"
-        },
-        {
-            "type": "file",
-            "source": "{{template_dir}}/actions-runner-config.sh",
-            "destination": "/tmp/actions-runner-config.sh"
-        },
-        {
             "type": "shell",
             "inline": [
                 "mv -f /tmp/hosts /etc/",
-                "mv /tmp/github-runner-env /etc/",
-                "mv /tmp/github-runner-install.service /etc/systemd/system/",
-                "mv /tmp/github-runner-config.service /etc/systemd/system/",
-                "mv /tmp/github-runner.service /etc/systemd/system/",
-                "mv /tmp/github-runner-install@.service /etc/systemd/system/",
-                "mv /tmp/github-runner-config@.service /etc/systemd/system/",
-                "mv /tmp/github-runner@.service /etc/systemd/system/",
-                "mv /tmp/actions-runner-install.sh \"$RUNNER_HOME\"/",
-                "mv /tmp/actions-runner-config.sh \"$RUNNER_HOME\"/",
-                "chmod 0644 /etc/github-runner-env",
-                "chown root:root /etc/github-runner-env",
-                "chmod 0644 /etc/systemd/system/github*",
-                "chown root:root /etc/systemd/system/github*",
-                "chmod 0755 \"$RUNNER_HOME/actions-runner-install.sh\"",
-                "chmod 0755 \"$RUNNER_HOME/actions-runner-config.sh\"",
                 "chown root:root /etc/hosts"
+            ],
+            "environment_vars": [
+                "RUNNER_HOME={{user `runner_home`}}"
+            ],
+            "execute_command": "sudo sh -c '{{ .Vars }} {{ .Path }}'"
+        },
+        {
+            "type": "shell",
+            "scripts": [
+                "{{template_dir}}/scripts/installers/grub.sh"
             ],
             "environment_vars": [
                 "RUNNER_HOME={{user `runner_home`}}"
@@ -95,16 +45,14 @@
         {
             "type": "shell",
             "scripts": [
-                "{{template_dir}}/scripts/installers/awspowershell.sh",
-                "{{template_dir}}/scripts/installers/auto.sh"
+                "{{template_dir}}/scripts/installers/Install-Awspowershell.ps1"
             ],
             "environment_vars": [
-                "METADATA_FILE={{user `metadata_file`}}",
                 "HELPER_SCRIPTS={{user `helper_script_folder`}}",
-                "DEBIAN_FRONTEND=noninteractive",
-                "RUNNER_HOME={{user `runner_home`}}"
+                "RUNNER_HOME={{user `runner_home`}}",
+                "INSTALLER_SCRIPT_FOLDER={{user `installer_script_folder`}}"
             ],
-            "execute_command": "sudo sh -c '{{ .Vars }} {{ .Path }}'"
+            "execute_command": "sudo sh -c '{{ .Vars }} pwsh -f {{ .Path }}'"
         },
         {
             "type": "shell",
